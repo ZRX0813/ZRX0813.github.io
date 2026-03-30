@@ -1,4 +1,4 @@
-/** Italy: approximate view */
+/** Initial view: Italy (approx.) */
 const ITALY_CENTER = [42.5, 12.5];
 const ITALY_ZOOM = 6;
 
@@ -340,7 +340,6 @@ searchDragHandle?.addEventListener("pointerdown", (e) => {
 
 window.addEventListener("resize", () => {
   if (!searchFloat || !mapWrap) return;
-  const w = mapWrap.getBoundingClientRect();
   const r = searchFloat.getBoundingClientRect();
   const left = r.left - w.left;
   const top = r.top - w.top;
