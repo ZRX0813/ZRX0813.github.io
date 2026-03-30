@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>在线地图 · Inventory</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="css/map.css" />
+</head>
+<body>
+  <header class="toolbar">
+    <h1 class="title">在线地图</h1>
+    <div class="toolbar-actions">
+      <label class="btn btn-file">
+        导入 GeoJSON
+        <input type="file" id="geojson-file" accept=".geojson,.json,application/geo+json" multiple />
+      </label>
+      <button type="button" class="btn" id="btn-load-url" title="从同仓库路径加载，如 data/layer.geojson">按路径加载</button>
+      <button type="button" class="btn btn-ghost" id="btn-clear">清除矢量图层</button>
+      <button type="button" class="btn btn-ghost" id="btn-fit">缩放到图层</button>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="sidebar">
+    <section class="panel">
+      <h2>底图</h2>
+      <p class="hint">右上角图层控件可切换 OpenStreetMap 与浅色参考底图。</p>
+    </section>
+    <section class="panel">
+      <h2>矢量图层</h2>
+      <p class="hint" id="layer-hint">通过「导入 GeoJSON」或「按路径加载」叠加数据；后续可把文件放在仓库 <code>data/</code> 目录。</p>
+      <ul class="layer-list" id="layer-list" aria-live="polite"></ul>
+    </section>
+  </aside>
+
+  <main id="map"></main>
+
+  <div class="modal hidden" id="url-modal" role="dialog" aria-modal="true" aria-labelledby="url-modal-title">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card">
+      <h2 id="url-modal-title">按路径加载 GeoJSON</h2>
+      <p class="hint">填写相对站点根路径，例如 <code>data/regions.geojson</code>（需已提交到仓库）。</p>
+      <input type="text" id="url-input" class="text-input" placeholder="data/example.geojson" autocomplete="off" />
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal>取消</button>
+        <button type="button" class="btn" id="url-confirm">加载</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="js/map.js" type="module"></script>
+</body>
+</html>
