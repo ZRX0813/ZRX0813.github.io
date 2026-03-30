@@ -149,7 +149,7 @@ async function loadLayerManifest() {
   renderToggles(list);
 }
 
-/** Nominatim — 轻量使用；若遇网络限制可改用其他地理编码服务 */
+/** Nominatim — use responsibly per https://operations.osmfoundation.org/policies/nominatim/ */
 async function searchPlaces(query) {
   const q = query.trim();
   if (!q) return [];
@@ -158,9 +158,9 @@ async function searchPlaces(query) {
   u.searchParams.set("q", q);
   u.searchParams.set("limit", "10");
   const res = await fetch(u.toString(), {
-    headers: { "Accept-Language": "zh-CN,en;q=0.9" },
+    headers: { "Accept-Language": "en" },
   });
-  if (!res.ok) throw new Error(`检索失败 (${res.status})`);
+  if (!res.ok) throw new Error(`Search failed (${res.status})`);
   return res.json();
 }
 
@@ -198,6 +198,9 @@ if (typeof ResizeObserver !== "undefined") {
   if (bar) new ResizeObserver(updateToolbarHeight).observe(bar);
 }
 
+const mapWrap = document.getElementById("map-wrap");
+const searchFloat = document.getElementById("search-float");
+const searchDragHandle = document.getElementById("search-drag-handle");
 const searchInput = document.getElementById("search-input");
 const searchBtn = document.getElementById("search-btn");
 const searchResults = document.getElementById("search-results");
@@ -212,7 +215,7 @@ function showResults(items) {
   if (!items.length) {
     const empty = document.createElement("div");
     empty.className = "search-item";
-    empty.textContent = "未找到结果";
+    empty.textContent = "No results";
     searchResults.appendChild(empty);
   } else {
     for (const item of items) {
@@ -258,7 +261,95 @@ searchInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") runSearch();
 });
 document.addEventListener("click", (e) => {
-  if (!document.getElementById("search")?.contains(e.target)) hideResults();
+  if (!searchFloat?.contains(e.target)) hideResults();
+});
+
+/** Draggable search panel (pointer events; no close control) */
+function syncSearchFloatBox() {
+  if (!searchFloat || !mapWrap) return;
+  const r = searchFloat.getBoundingClientRect();
+  const w = mapWrap.getBoundingClientRect();
+  const left = r.left - w.left;
+  const top = r.top - w.top;
+  searchFloat.style.right = "auto";
+  searchFloat.style.left = `${Math.round(left)}px`;
+  searchFloat.style.top = `${Math.round(top)}px`;
+}
+
+function clampSearchPosition(left, top) {
+  const pad = 8;
+  const w = mapWrap.getBoundingClientRect();
+  const r = searchFloat.getBoundingClientRect();
+  const maxL = w.width - r.width - pad;
+  const maxT = w.height - r.height - pad;
+  return {
+    left: Math.min(Math.max(pad, left), Math.max(pad, maxL)),
+    top: Math.min(Math.max(pad, top), Math.max(pad, maxT)),
+  };
+}
+
+let dragPtr = null;
+let dragStartX = 0;
+let dragStartY = 0;
+let dragOriginLeft = 0;
+let dragOriginTop = 0;
+
+function onDragMove(e) {
+  if (dragPtr == null || e.pointerId !== dragPtr) return;
+  const dx = e.clientX - dragStartX;
+  const dy = e.clientY - dragStartY;
+  const next = clampSearchPosition(dragOriginLeft + dx, dragOriginTop + dy);
+  searchFloat.style.left = `${next.left}px`;
+  searchFloat.style.top = `${next.top}px`;
+  searchFloat.style.right = "auto";
+}
+
+function onDragEnd(e) {
+  if (dragPtr == null || e.pointerId !== dragPtr) return;
+  dragPtr = null;
+  try {
+    searchDragHandle.releasePointerCapture(e.pointerId);
+  } catch {
+    /* ignore */
+  }
+  document.removeEventListener("pointermove", onDragMove);
+  document.removeEventListener("pointerup", onDragEnd);
+  document.removeEventListener("pointercancel", onDragEnd);
+}
+
+searchDragHandle?.addEventListener("pointerdown", (e) => {
+  if (e.pointerType === "mouse" && e.button !== 0) return;
+  e.preventDefault();
+  syncSearchFloatBox();
+  const w = mapWrap.getBoundingClientRect();
+  const r = searchFloat.getBoundingClientRect();
+  dragOriginLeft = r.left - w.left;
+  dragOriginTop = r.top - w.top;
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  dragPtr = e.pointerId;
+  try {
+    searchDragHandle.setPointerCapture(e.pointerId);
+  } catch {
+    /* ignore */
+  }
+  document.addEventListener("pointermove", onDragMove);
+  document.addEventListener("pointerup", onDragEnd);
+  document.addEventListener("pointercancel", onDragEnd);
+});
+
+window.addEventListener("resize", () => {
+  if (!searchFloat || !mapWrap) return;
+  const w = mapWrap.getBoundingClientRect();
+  const r = searchFloat.getBoundingClientRect();
+  const left = r.left - w.left;
+  const top = r.top - w.top;
+  const c = clampSearchPosition(left, top);
+  if (c.left !== left || c.top !== top) {
+    searchFloat.style.left = `${c.left}px`;
+    searchFloat.style.top = `${c.top}px`;
+    searchFloat.style.right = "auto";
+  }
 });
 
 loadLayerManifest();

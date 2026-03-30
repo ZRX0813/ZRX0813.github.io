@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,23 +12,33 @@
     <h1 class="title" title="MB-NetV3: Regional-Scale Inventory Mapping of Creeping Landslides from Wrapped Interferograms">
       MB-NetV3: Regional-Scale Inventory Mapping of Creeping Landslides from Wrapped Interferograms
     </h1>
-    <div class="search" id="search">
-      <input type="search" id="search-input" class="search-input" placeholder="搜索地名（如 Rome, 米兰）" autocomplete="off" enterkeyhint="search" />
-      <button type="button" class="btn" id="search-btn">搜索</button>
-      <div class="search-results hidden" id="search-results" role="listbox" aria-label="搜索结果"></div>
-    </div>
   </header>
 
-  <aside class="layer-panel hidden" id="layer-panel" aria-label="叠加图层">
+  <aside class="layer-panel hidden" id="layer-panel" aria-label="Overlay layers">
     <div class="layer-panel-inner" id="overlay-toggles"></div>
   </aside>
 
-  <main id="map"></main>
+  <div class="map-wrap" id="map-wrap">
+    <main id="map" aria-hidden="false"></main>
+    <div class="search-float" id="search-float" role="search">
+      <div class="search-float-handle" id="search-drag-handle" title="Drag to move">
+        <span class="search-float-grip" aria-hidden="true"></span>
+        <span class="search-float-title">Place search</span>
+      </div>
+      <div class="search-float-body">
+        <div class="search-row">
+          <input type="search" id="search-input" class="search-input" placeholder="e.g. Rome, Milan, Tuscany" autocomplete="off" enterkeyhint="search" />
+          <button type="button" class="btn" id="search-btn">Search</button>
+        </div>
+        <div class="search-results hidden" id="search-results" role="listbox" aria-label="Search results"></div>
+      </div>
+    </div>
+  </div>
 
   <p class="attrib">
-    <a href="/">主页</a>
-    · 底图 © <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer">OpenStreetMap</a>
-    · 地名 © <a href="https://nominatim.org" rel="noopener noreferrer">Nominatim</a>
+    <a href="/">Home</a>
+    · Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer">OpenStreetMap</a>
+    · Geocoding © <a href="https://nominatim.org" rel="noopener noreferrer">Nominatim</a>
   </p>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
