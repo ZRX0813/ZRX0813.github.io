@@ -108,6 +108,9 @@ const registry = new Map();
 /** @type {{ lyr: L.CircleMarker, baseStyle: object } | null} */
 let exclusivePointSelection = null;
 
+/** @type {{ lyr: L.Path, baseStyle: object } | null} */
+let exclusivePathSelection = null;
+
 function clearExclusivePointSelection() {
   if (exclusivePointSelection) {
     exclusivePointSelection.lyr.setStyle(exclusivePointSelection.baseStyle);
@@ -115,9 +118,33 @@ function clearExclusivePointSelection() {
   }
 }
 
-map.on("click", () => {
+function clearExclusivePathSelection() {
+  if (exclusivePathSelection) {
+    exclusivePathSelection.lyr.setStyle(exclusivePathSelection.baseStyle);
+    exclusivePathSelection = null;
+  }
+}
+
+function clearAllExclusiveSelections() {
   clearExclusivePointSelection();
+  clearExclusivePathSelection();
+}
+
+map.on("click", () => {
+  clearAllExclusiveSelections();
 });
+
+function pathDetailSelectedStyle(base) {
+  const fillO = base.fillOpacity ?? 0.22;
+  return {
+    ...base,
+    weight: (base.weight ?? 1) + 1,
+    color: "#713f12",
+    opacity: 1,
+    fillColor: base.fillColor != null ? "#b45309" : base.fillColor,
+    fillOpacity: Math.min(0.55, fillO + 0.28),
+  };
+}
 
 function lon2tileX(lon, z) {
   return Math.floor(((lon + 180) / 360) * 2 ** z);
@@ -194,8 +221,19 @@ function attachFeatureHandlers(feature, lyr, rec) {
       };
       lyr.on("click", (e) => {
         L.DomEvent.stopPropagation(e);
-        clearExclusivePointSelection();
+        clearAllExclusiveSelections();
         exclusivePointSelection = { lyr, baseStyle };
+        lyr.setStyle(selectedStyle);
+        openDetailPanel(spec.label, feature.properties);
+        if (e.latlng) map.panTo(e.latlng, { animate: true });
+      });
+    } else if (lyr.setStyle) {
+      const baseStyle = { ...rec.pathStyle };
+      const selectedStyle = pathDetailSelectedStyle(baseStyle);
+      lyr.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        clearAllExclusiveSelections();
+        exclusivePathSelection = { lyr, baseStyle };
         lyr.setStyle(selectedStyle);
         openDetailPanel(spec.label, feature.properties);
         if (e.latlng) map.panTo(e.latlng, { animate: true });
@@ -219,6 +257,9 @@ function attachFeatureHandlers(feature, lyr, rec) {
     return;
   }
   if (spec.detailPanel && isPoint && rec.pointStyle) {
+    return;
+  }
+  if (spec.detailPanel && !isPoint) {
     return;
   }
   if (isPoint && rec.pointStyle) {
@@ -426,6 +467,7 @@ function setOverlayVisible(id, on) {
   if (rec.spec.tiled) {
     if (!on) {
       if (id === "iffi_piff_cmba") clearExclusivePointSelection();
+      if (id === "iffi_poly_cmba") clearExclusivePathSelection();
       disableTiledLayer(id);
       row?.querySelector(".err")?.remove();
       return;
@@ -437,6 +479,7 @@ function setOverlayVisible(id, on) {
 
   if (!on) {
     if (id === "iffi_piff_cmba") clearExclusivePointSelection();
+    if (id === "iffi_poly_cmba") clearExclusivePathSelection();
     if (rec.layer) overlayRoot.removeLayer(rec.layer);
     if (row) row.querySelector(".err")?.remove();
     return;
@@ -463,7 +506,7 @@ function setOverlayVisible(id, on) {
 }
 
 function renderToggles(layers) {
-  clearExclusivePointSelection();
+  clearAllExclusiveSelections();
   for (const rec of registry.values()) {
     if (rec.refreshHandler) {
       map.off("moveend", rec.refreshHandler);
@@ -619,7 +662,7 @@ function openDetailPanel(layerLabel, properties) {
 }
 
 function closeDetailPanel() {
-  clearExclusivePointSelection();
+  clearAllExclusiveSelections();
   detailPanel?.classList.add("hidden");
   window.requestAnimationFrame(syncFooterHeight);
 }
