@@ -317,6 +317,10 @@ body.map-offset .leaflet-left .leaflet-control {
   font-family: inherit;
 }
 
+.leaflet-control-scale-line {
+  text-align: center;
+}
+
 .leaflet-control-attribution {
   color: var(--chrome-muted);
   text-shadow: var(--chrome-halo);
