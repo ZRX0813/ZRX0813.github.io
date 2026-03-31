@@ -456,22 +456,6 @@ a.pub-title:focus-visible {
   opacity: 0.88;
 }
 
-.home-education-source {
-  margin: 0.35rem 0 0;
-  font-size: 0.8rem;
-  opacity: 0.72;
-}
-
-.home-education-source a {
-  color: var(--chrome-link);
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.home-education-source a:hover {
-  text-decoration: underline;
-}
-
 .home-research {
   font-size: 0.92rem;
   line-height: 1.58;
