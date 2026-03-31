@@ -403,24 +403,13 @@ body.map-offset .leaflet-left .leaflet-control {
   color: #0d47a1;
 }
 
-.foot-author {
-  margin: 8px 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 6px 10px;
+.foot-inline {
   font-size: 10px;
+  font-weight: 500;
   line-height: 1.4;
-  color: var(--chrome-muted);
+  color: var(--chrome-text);
   letter-spacing: 0.02em;
   text-shadow: var(--chrome-halo);
-}
-
-.foot-author-name {
-  font-weight: 600;
-  color: var(--chrome-text);
 }
 
 /* Draggable attribute panel (IFFI click); default anchored above footer, bottom-right */
