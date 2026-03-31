@@ -1,0 +1,100 @@
+:root {
+  --chrome-text: #18202c;
+  --chrome-muted: #4a5568;
+  --chrome-link: #1565c0;
+  --border: rgba(0, 0, 0, 0.1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--chrome-text);
+  background: #f8fafc;
+  line-height: 1.55;
+}
+
+.page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem clamp(16px, 4vw, 28px) 3rem;
+}
+
+.mast {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.mast h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.mast nav {
+  font-size: 0.8rem;
+}
+
+.mast a {
+  color: var(--chrome-link);
+  text-decoration: none;
+}
+
+.mast a:hover {
+  text-decoration: underline;
+}
+
+.disclaim section {
+  margin: 1.35rem 0;
+}
+
+.disclaim h2 {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--chrome-muted);
+}
+
+.disclaim p,
+.disclaim li {
+  margin: 0 0 0.65rem;
+  font-size: 0.84rem;
+  color: var(--chrome-text);
+}
+
+.disclaim ul {
+  margin: 0.35rem 0 0.65rem;
+  padding-left: 1.15rem;
+}
+
+.disclaim a {
+  color: var(--chrome-link);
+  text-decoration: none;
+}
+
+.disclaim a:hover {
+  text-decoration: underline;
+}
+
+.disclaim strong {
+  font-weight: 650;
+}
+
+.foot-mini {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--chrome-muted);
+}
