@@ -339,6 +339,27 @@ main {
   opacity: 0.88;
 }
 
+.recent-card-meta {
+  margin: 0 0 0.65rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--chrome-text);
+  opacity: 0.72;
+}
+
+.recent-card-authors {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--chrome-muted);
+  opacity: 0.92;
+}
+
+.recent-card-authors .self-name {
+  color: var(--chrome-text);
+  opacity: 1;
+}
+
 .pub-list {
   margin: 0;
   padding: 0;
