@@ -358,9 +358,11 @@ body.map-offset .leaflet-left .leaflet-control {
 }
 
 .foot-inner {
-  padding: 4px 12px 5px;
-  max-width: 900px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 6px clamp(10px, 3vw, 28px) 8px;
+  box-sizing: border-box;
 }
 
 .foot-rail {
@@ -368,8 +370,9 @@ body.map-offset .leaflet-left .leaflet-control {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 6px 10px;
-  font-size: 10px;
+  gap: 3px 7px;
+  font-size: 9px;
+  line-height: 1.35;
   color: var(--chrome-muted);
   letter-spacing: 0.02em;
   text-shadow: var(--chrome-halo);
@@ -377,8 +380,9 @@ body.map-offset .leaflet-left .leaflet-control {
 
 .foot-chip {
   font-size: 9px;
+  line-height: 1.35;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--chrome-muted);
   font-weight: 600;
 }
@@ -392,6 +396,8 @@ body.map-offset .leaflet-left .leaflet-control {
 }
 
 .foot-link {
+  font-size: 9px;
+  line-height: 1.35;
   color: var(--chrome-link);
   text-decoration: none;
   transition: color 0.15s ease;
@@ -404,27 +410,39 @@ body.map-offset .leaflet-left .leaflet-control {
 }
 
 .foot-inline {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1.35;
   color: var(--chrome-text);
   letter-spacing: 0.02em;
   text-shadow: var(--chrome-halo);
+  white-space: nowrap;
 }
 
 .foot-note {
-  margin: 8px auto 0;
-  padding: 0 10px;
-  max-width: 52rem;
+  margin: 7px auto 0;
+  padding: 7px 0 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  max-width: min(70rem, 100%);
+  width: 100%;
+  box-sizing: border-box;
   font-size: 9px;
-  line-height: 1.5;
+  line-height: 1.45;
   color: var(--chrome-muted);
   text-align: center;
   letter-spacing: 0.01em;
   text-shadow: var(--chrome-halo);
+  text-wrap: balance;
+}
+
+.site-foot .foot-note strong {
+  font-weight: 600;
+  font-size: inherit;
+  color: var(--chrome-text);
 }
 
 .foot-note a {
+  font-size: inherit;
   color: var(--chrome-link);
   text-decoration: none;
 }
