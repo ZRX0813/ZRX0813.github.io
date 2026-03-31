@@ -412,6 +412,27 @@ body.map-offset .leaflet-left .leaflet-control {
   text-shadow: var(--chrome-halo);
 }
 
+.foot-note {
+  margin: 8px auto 0;
+  padding: 0 10px;
+  max-width: 52rem;
+  font-size: 9px;
+  line-height: 1.5;
+  color: var(--chrome-muted);
+  text-align: center;
+  letter-spacing: 0.01em;
+  text-shadow: var(--chrome-halo);
+}
+
+.foot-note a {
+  color: var(--chrome-link);
+  text-decoration: none;
+}
+
+.foot-note a:hover {
+  text-decoration: underline;
+}
+
 /* Draggable attribute panel (IFFI click); default anchored above footer, bottom-right */
 .detail-panel {
   position: fixed;
