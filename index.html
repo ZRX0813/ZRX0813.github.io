@@ -3,65 +3,61 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZRX · Research &amp; Profile</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <title>Ruixuan Zhang · 张睿轩</title>
   <link rel="stylesheet" href="css/home.css" />
 </head>
 <body>
-  <div class="grain" aria-hidden="true"></div>
   <header class="site-header">
-    <span class="logo-mark"></span>
-    <nav class="nav">
-      <a href="#about">About</a>
-      <a href="#research">Research</a>
-      <a href="/MB-NetV3/" class="nav-highlight">MB-NetV3 Map</a>
-      <a href="#contact">Contact</a>
+    <a class="site-brand" href="/">Ruixuan Zhang</a>
+    <nav class="nav" aria-label="主导航">
+      <a href="#research">研究成果</a>
+      <a href="#news">动态</a>
     </nav>
   </header>
 
   <main>
-    <section class="hero">
-      <p class="hero-kicker">Remote Sensing · Geohazards · SAR</p>
-      <h1 class="hero-title">Ruixuan Zhang</h1>
-      <p class="hero-sub">
-        MB-InSAR、活动滑坡与区域尺度地表形变监测相关研究。本页为个人主页雏形，可按需改写文案与链接。
-      </p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="/MB-NetV3/">打开 Inventory 地图</a>
-        <a class="btn btn-outline" href="https://github.com/ZRX0813" rel="noopener noreferrer">GitHub</a>
+    <section class="intro" aria-label="简介">
+      <p class="intro-kicker">Remote Sensing · Geohazards · SAR / InSAR</p>
+      <h1 class="intro-title">张睿轩 · Ruixuan Zhang</h1>
+      <div class="intro-body">
+        <p>
+          研究兴趣包括干涉合成孔径雷达（InSAR）与相位解缠、区域尺度地表形变与活动滑坡遥感监测，以及面向工程与自然营力场景的清单制图与验证框架。
+        </p>
+        <p>
+          在线制图示例见 <a href="/MB-NetV3/">MB-NetV3 Inventory Map</a>（南亚平宁 GMBA 范围与 IFFI 开放数据叠加展示，详见页内免责声明）。
+        </p>
+      </div>
+      <ul class="intro-links" aria-label="外部链接">
+        <li><a href="/MB-NetV3/">Inventory 地图</a></li>
+        <li><a href="https://github.com/ZRX0813" rel="noopener noreferrer">GitHub</a></li>
+        <li><a href="https://orcid.org/0009-0009-0099-7879" rel="noopener noreferrer">ORCID</a></li>
+      </ul>
+    </section>
+
+    <section id="research" class="panel-section">
+      <h2 class="section-title">研究成果</h2>
+      <div class="panel-list">
+        <article class="panel-card">
+          <h3>MB-NetV3 · Regional-scale creeping landslides</h3>
+          <p>
+            基于缠绕协议干涉图的蠕动型滑坡区域尺度清单制图；配套 Web 可视化与矢量切片/分片加载流程。
+          </p>
+          <a class="panel-card-link" href="/MB-NetV3/">打开地图应用 →</a>
+        </article>
+        <p class="panel-placeholder">更多论文（含 DOI）与数据集说明可在整理后补充至此列表。</p>
       </div>
     </section>
 
-    <section class="cards" id="about">
-      <article class="card">
-        <h2>关于</h2>
-        <p>
-          研究方向包括干涉合成孔径雷达（InSAR）处理、相位解缠与基线工程化流程，以及面向蠕动型滑坡等领域的遥感清单制图与验证框架。
-        </p>
-      </article>
-      <article class="card" id="research">
-        <h2>MB-NetV3</h2>
-        <p>
-          Regional-scale inventory mapping of creeping landslides from wrapped interferograms。
-          在线制图界面部署在子路径 <code>/MB-NetV3/</code>，用于叠加矢量图层与地名检索。
-        </p>
-        <a href="/MB-NetV3/" class="card-link">前往地图应用 →</a>
-      </article>
-      <article class="card" id="contact">
-        <h2>联系</h2>
-        <p>请将此处替换为你的邮箱、单位或学术主页链接。</p>
-        <ul class="contact-list">
-          <li><span>Email</span> <a href="mailto:you@example.com">you@example.com</a></li>
-          <li><span>Affiliation</span> 待填写</li>
-        </ul>
-      </article>
+    <section id="news" class="panel-section">
+      <h2 class="section-title">动态</h2>
+      <p class="panel-placeholder">暂无条目。学术活动、开源更新与报道将在此按时间线刊登。</p>
     </section>
   </main>
 
   <footer class="site-footer">
     <span>© 2026 · GitHub Pages</span>
+    <span class="footer-dot" aria-hidden="true">·</span>
+    <a class="footer-link" href="/MB-NetV3/disclaimer.html">Data disclaimer</a>
   </footer>
 </body>
 </html>
