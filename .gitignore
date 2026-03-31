@@ -1,2 +1,5 @@
 # Regenerate with: python3 scripts/build_iffi_cmba.py
 layer/IFFI/*.json
+# Monolithic IFFI (optional); use scripts/build_iffi_chunks.py after CMBA clip
+MB-NetV3/data/iffi_piff_cmba.geojson
+MB-NetV3/data/iffi_poly_cmba.geojson

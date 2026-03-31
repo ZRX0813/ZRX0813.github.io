@@ -10,20 +10,26 @@
     },
     {
       "id": "iffi_piff_cmba",
-      "label": "IFFI — PIFF points (CMBA extent)",
-      "geojson": "data/iffi_piff_cmba.geojson",
+      "label": "IFFI — PIFF points (CMBA, tiled)",
       "defaultEnabled": false,
       "noPopup": true,
       "detailPanel": true,
-      "pointRadius": 4
+      "pointRadius": 4,
+      "tiled": {
+        "indexUrl": "data/chunks/iffi_piff/index.json",
+        "urlTemplate": "data/chunks/iffi_piff/{z}/{tile}.geojson"
+      }
     },
     {
       "id": "iffi_poly_cmba",
-      "label": "IFFI — landslide polygons (CMBA extent)",
-      "geojson": "data/iffi_poly_cmba.geojson",
+      "label": "IFFI — landslide polygons (CMBA, tiled)",
       "defaultEnabled": false,
       "noPopup": true,
-      "detailPanel": true
+      "detailPanel": true,
+      "tiled": {
+        "indexUrl": "data/chunks/iffi_poly/index.json",
+        "urlTemplate": "data/chunks/iffi_poly/{z}/{tile}.geojson"
+      }
     }
   ]
 }

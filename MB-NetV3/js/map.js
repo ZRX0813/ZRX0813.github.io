@@ -2,6 +2,10 @@
 const ITALY_CENTER = [42.5, 12.5];
 const ITALY_ZOOM = 6;
 
+const TILE_DEBOUNCE_MS = 280;
+const MAX_TILES_IN_VIEW = 36;
+const TILE_FETCH_CONCURRENCY = 5;
+
 const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -32,11 +36,6 @@ function styleForIndex(i) {
   };
 }
 
-/**
- * @param {LayerSpec} spec
- * @param {number} idx
- * @returns {{ pathStyle: object, pointStyle: object | null }}
- */
 function stylesForSpec(spec, idx) {
   if (spec.pointRadius != null || spec.id.includes("piff")) {
     return {
@@ -76,18 +75,75 @@ function escapeHtml(s) {
  * @typedef {object} LayerSpec
  * @property {string} id
  * @property {string} label
- * @property {string} geojson
+ * @property {string} [geojson]
  * @property {boolean} [defaultEnabled]
  * @property {boolean} [fitOnLoad]
  * @property {boolean} [noPopup]
  * @property {boolean} [detailPanel]
  * @property {number} [pointRadius]
+ * @property {{ indexUrl: string, urlTemplate: string }} [tiled]
  */
 
-/** @type {Map<string, { layer: L.GeoJSON | null, spec: LayerSpec, pathStyle: object, pointStyle: object | null, didFit?: boolean }>} */
+/**
+ * @typedef {object} LayerRec
+ * @property {LayerSpec} spec
+ * @property {object} pathStyle
+ * @property {object | null} pointStyle
+ * @property {boolean} [didFit]
+ * @property {L.LayerGroup | null} [tileGroup]
+ * @property {Map<string, L.GeoJSON>} [loadedTiles]
+ * @property {{ z: number, available: Set<string>, urlTemplate: string } | null} [indexMeta]
+ * @property {(() => void) | null} [refreshHandler]
+ * @property {ReturnType<typeof setTimeout> | null} [debTimer]
+ * @property {L.GeoJSON | null} [layer]
+ */
+
+/** @type {Map<string, LayerRec>} */
 const registry = new Map();
 
+function lon2tileX(lon, z) {
+  return Math.floor(((lon + 180) / 360) * 2 ** z);
+}
+
+function lat2tileY(lat, z) {
+  const r = (lat * Math.PI) / 180;
+  return Math.floor(((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * 2 ** z);
+}
+
+function tileKeysForBounds(bounds, z) {
+  const x0 = lon2tileX(bounds.getWest(), z);
+  const x1 = lon2tileX(bounds.getEast(), z);
+  const y0 = lat2tileY(bounds.getNorth(), z);
+  const y1 = lat2tileY(bounds.getSouth(), z);
+  const xa = Math.min(x0, x1);
+  const xb = Math.max(x0, x1);
+  const ya = Math.min(y0, y1);
+  const yb = Math.max(y0, y1);
+  const keys = [];
+  for (let x = xa; x <= xb; x++) {
+    for (let y = ya; y <= yb; y++) {
+      keys.push(`${x}_${y}`);
+    }
+  }
+  return keys;
+}
+
+function prioritizeTiles(keys, center, z, maxN) {
+  if (keys.length <= maxN) return keys;
+  const cx = lon2tileX(center.lng, z);
+  const cy = lat2tileY(center.lat, z);
+  keys.sort((a, b) => {
+    const [ax, ay] = a.split("_").map(Number);
+    const [bx, by] = b.split("_").map(Number);
+    const da = (ax - cx) ** 2 + (ay - cy) ** 2;
+    const db = (bx - cx) ** 2 + (by - cy) ** 2;
+    return da - db;
+  });
+  return keys.slice(0, maxN);
+}
+
 function bindVectorHover(lyr, baseStyle, isPoint) {
+  if (!baseStyle) return;
   if (isPoint) {
     lyr.on("mouseover", () => lyr.setStyle({ ...baseStyle, weight: 2, fillOpacity: 1 }));
     lyr.on("mouseout", () => lyr.setStyle(baseStyle));
@@ -103,48 +159,52 @@ function bindVectorHover(lyr, baseStyle, isPoint) {
   }
 }
 
+function attachFeatureHandlers(feature, lyr, rec) {
+  const spec = rec.spec;
+  const isPoint = feature.geometry?.type === "Point";
+
+  if (spec.detailPanel && feature.properties) {
+    lyr.on("click", (e) => {
+      L.DomEvent.stopPropagation(e);
+      openDetailPanel(spec.label, feature.properties);
+      if (e.latlng) map.panTo(e.latlng, { animate: true });
+    });
+  } else if (!spec.noPopup) {
+    const props =
+      feature.properties && Object.keys(feature.properties).length
+        ? `<pre class="popup-props">${escapeHtml(JSON.stringify(feature.properties, null, 2))}</pre>`
+        : "";
+    lyr.bindPopup(`<strong>${escapeHtml(spec.label)}</strong>${props}`);
+  }
+
+  if (isPoint && rec.pointStyle) {
+    bindVectorHover(lyr, rec.pointStyle, true);
+  } else {
+    bindVectorHover(lyr, rec.pathStyle, false);
+  }
+}
+
+function createLeafletGeoJsonOptions(rec) {
+  const options = {
+    style: rec.pathStyle,
+    onEachFeature(feature, lyr) {
+      attachFeatureHandlers(feature, lyr, rec);
+    },
+  };
+  if (rec.pointStyle) {
+    options.pointToLayer = (feature, latlng) => L.circleMarker(latlng, { ...rec.pointStyle });
+  }
+  return options;
+}
+
 async function ensureLayerLoaded(id) {
   const rec = registry.get(id);
-  if (!rec || rec.layer) return rec?.layer ?? null;
+  if (!rec || rec.layer || rec.spec.tiled) return rec?.layer ?? null;
   const url = new URL(rec.spec.geojson, window.location.href).href;
   const res = await fetch(url, { credentials: "same-origin" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
-
-  const options = {
-    style: rec.pathStyle,
-    onEachFeature(feature, lyr) {
-      const spec = rec.spec;
-      const isPoint = feature.geometry?.type === "Point";
-      const styleBase = isPoint && rec.pointStyle ? rec.pointStyle : rec.pathStyle;
-
-      if (spec.detailPanel && feature.properties) {
-        lyr.on("click", (e) => {
-          L.DomEvent.stopPropagation(e);
-          openDetailPanel(spec.label, feature.properties);
-          if (e.latlng) map.panTo(e.latlng, { animate: true });
-        });
-      } else if (!spec.noPopup) {
-        const props =
-          feature.properties && Object.keys(feature.properties).length
-            ? `<pre class="popup-props">${escapeHtml(JSON.stringify(feature.properties, null, 2))}</pre>`
-            : "";
-        lyr.bindPopup(`<strong>${escapeHtml(spec.label)}</strong>${props}`);
-      }
-
-      if (isPoint) {
-        bindVectorHover(lyr, rec.pointStyle, true);
-      } else {
-        bindVectorHover(lyr, rec.pathStyle, false);
-      }
-    },
-  };
-
-  if (rec.pointStyle) {
-    options.pointToLayer = (feature, latlng) => L.circleMarker(latlng, { ...rec.pointStyle });
-  }
-
-  const gj = L.geoJSON(data, options);
+  const gj = L.geoJSON(data, createLeafletGeoJsonOptions(rec));
 
   if (!rec.spec.noPopup && !rec.spec.detailPanel) {
     gj.eachLayer((lyr) => {
@@ -165,10 +225,142 @@ async function ensureLayerLoaded(id) {
   return gj;
 }
 
+function disableTiledLayer(id) {
+  const rec = registry.get(id);
+  if (!rec) return;
+  if (rec.refreshHandler) {
+    map.off("moveend", rec.refreshHandler);
+    map.off("zoomend", rec.refreshHandler);
+    rec.refreshHandler = null;
+  }
+  if (rec.debTimer) {
+    clearTimeout(rec.debTimer);
+    rec.debTimer = null;
+  }
+  if (rec.tileGroup) {
+    overlayRoot.removeLayer(rec.tileGroup);
+    rec.tileGroup.clearLayers();
+    rec.tileGroup = null;
+  }
+  if (rec.loadedTiles) {
+    rec.loadedTiles.clear();
+  }
+  rec.indexMeta = null;
+}
+
+function scheduleTiledRefresh(id) {
+  const rec = registry.get(id);
+  if (!rec) return;
+  if (rec.debTimer) clearTimeout(rec.debTimer);
+  rec.debTimer = setTimeout(() => {
+    refreshTiledLayer(id).catch(() => {});
+  }, TILE_DEBOUNCE_MS);
+}
+
+async function loadOneTile(rec, tileKey) {
+  if (!rec.tileGroup || !rec.indexMeta || rec.loadedTiles.has(tileKey)) return;
+  const tpl = rec.indexMeta.urlTemplate.replace("{z}", String(rec.indexMeta.z)).replace("{tile}", tileKey);
+  const url = new URL(tpl, window.location.href).href;
+  const res = await fetch(url, { credentials: "same-origin" });
+  if (!res.ok) return;
+  const data = await res.json();
+  if (!rec.tileGroup || rec.loadedTiles.has(tileKey)) return;
+  const sub = L.geoJSON(data, createLeafletGeoJsonOptions(rec));
+  rec.tileGroup.addLayer(sub);
+  rec.loadedTiles.set(tileKey, sub);
+}
+
+async function runPool(taskFns, n) {
+  let i = 0;
+  async function worker() {
+    while (i < taskFns.length) {
+      const j = i;
+      i += 1;
+      await taskFns[j]();
+    }
+  }
+  const k = Math.min(n, Math.max(1, taskFns.length));
+  await Promise.all(Array.from({ length: k }, () => worker()));
+}
+
+async function refreshTiledLayer(id) {
+  const rec = registry.get(id);
+  if (!rec?.tileGroup || !rec.indexMeta) return;
+  const { z, available } = rec.indexMeta;
+  let keys = tileKeysForBounds(map.getBounds().pad(0.12), z).filter((k) => available.has(k));
+  keys = prioritizeTiles(keys, map.getCenter(), z, MAX_TILES_IN_VIEW);
+  const keep = new Set(keys);
+
+  for (const k of [...rec.loadedTiles.keys()]) {
+    if (!keep.has(k)) {
+      rec.tileGroup.removeLayer(rec.loadedTiles.get(k));
+      rec.loadedTiles.delete(k);
+    }
+  }
+
+  const needed = keys.filter((k) => !rec.loadedTiles.has(k));
+  const tasks = needed.map((k) => () => loadOneTile(rec, k));
+  await runPool(tasks, TILE_FETCH_CONCURRENCY);
+}
+
+async function enableTiledLayer(id) {
+  const rec = registry.get(id);
+  const row = document.querySelector(`[data-layer-id="${CSS.escape(id)}"]`);
+  if (!rec?.spec.tiled) return;
+
+  disableTiledLayer(id);
+
+  rec.tileGroup = L.layerGroup();
+  rec.loadedTiles = new Map();
+
+  try {
+    const idxUrl = new URL(rec.spec.tiled.indexUrl, window.location.href).href;
+    const res = await fetch(idxUrl, { credentials: "same-origin" });
+    if (!res.ok) throw new Error(`index HTTP ${res.status}`);
+    const meta = await res.json();
+    rec.indexMeta = {
+      z: meta.z,
+      available: new Set(meta.tiles),
+      urlTemplate: rec.spec.tiled.urlTemplate,
+    };
+    rec.tileGroup.addTo(overlayRoot);
+    rec.refreshHandler = () => scheduleTiledRefresh(id);
+    map.on("moveend", rec.refreshHandler);
+    map.on("zoomend", rec.refreshHandler);
+    await refreshTiledLayer(id);
+  } catch (e) {
+    const msg = e?.message || String(e);
+    if (row) {
+      let err = row.querySelector(".err");
+      if (!err) {
+        err = document.createElement("div");
+        err.className = "err";
+        row.appendChild(err);
+      }
+      err.textContent = msg;
+    }
+    disableTiledLayer(id);
+    const cb = row?.querySelector('input[type="checkbox"]');
+    if (cb) cb.checked = false;
+  }
+}
+
 function setOverlayVisible(id, on) {
   const rec = registry.get(id);
   if (!rec) return;
   const row = document.querySelector(`[data-layer-id="${CSS.escape(id)}"]`);
+
+  if (rec.spec.tiled) {
+    if (!on) {
+      disableTiledLayer(id);
+      row?.querySelector(".err")?.remove();
+      return;
+    }
+    row?.querySelector(".err")?.remove();
+    enableTiledLayer(id);
+    return;
+  }
+
   if (!on) {
     if (rec.layer) overlayRoot.removeLayer(rec.layer);
     if (row) row.querySelector(".err")?.remove();
@@ -196,8 +388,24 @@ function setOverlayVisible(id, on) {
 }
 
 function renderToggles(layers) {
+  for (const rec of registry.values()) {
+    if (rec.refreshHandler) {
+      map.off("moveend", rec.refreshHandler);
+      map.off("zoomend", rec.refreshHandler);
+      rec.refreshHandler = null;
+    }
+    if (rec.debTimer) {
+      clearTimeout(rec.debTimer);
+      rec.debTimer = null;
+    }
+    if (rec.tileGroup) {
+      overlayRoot.removeLayer(rec.tileGroup);
+      rec.tileGroup.clearLayers();
+    }
+  }
   registry.clear();
   overlayRoot.clearLayers();
+
   const host = document.getElementById("overlay-toggles");
   const panel = document.getElementById("layer-panel");
   host.innerHTML = "";
@@ -211,7 +419,18 @@ function renderToggles(layers) {
 
   layers.forEach((spec, idx) => {
     const { pathStyle, pointStyle } = stylesForSpec(spec, idx);
-    registry.set(spec.id, { layer: null, spec, pathStyle, pointStyle, didFit: false });
+    registry.set(spec.id, {
+      spec,
+      pathStyle,
+      pointStyle,
+      didFit: false,
+      layer: null,
+      tileGroup: null,
+      loadedTiles: new Map(),
+      indexMeta: null,
+      refreshHandler: null,
+      debTimer: null,
+    });
 
     const row = document.createElement("div");
     row.className = "toggle-row";
@@ -244,7 +463,7 @@ async function loadLayerManifest() {
     if (res.ok) {
       const data = await res.json();
       const raw = Array.isArray(data.layers) ? data.layers : [];
-      list = raw.filter((x) => x && x.id && x.geojson);
+      list = raw.filter((x) => x && x.id && (x.geojson || x.tiled));
     }
   } catch {
     /* optional manifest */
@@ -252,7 +471,7 @@ async function loadLayerManifest() {
   renderToggles(list);
 }
 
-/** --- Detail panel (draggable, no Leaflet popup) --- */
+/** --- Detail panel --- */
 const detailPanel = document.getElementById("detail-panel");
 const detailDragHandle = document.getElementById("detail-drag-handle");
 const detailTitleEl = document.getElementById("detail-panel-title");
@@ -469,7 +688,6 @@ document.addEventListener("click", (e) => {
   if (!searchFloat?.contains(e.target)) hideResults();
 });
 
-/** Search float drag */
 function syncSearchFloatBox() {
   if (!searchFloat || !mapWrap) return;
   const r = searchFloat.getBoundingClientRect();

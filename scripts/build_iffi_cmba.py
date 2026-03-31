@@ -90,6 +90,7 @@ def main() -> None:
         sys.exit("missing IFFI dir: " + str(IFFI))
     clip_merge("frane_piff_*_opendata.json", OUT_PIFF, fix_poly=False)
     clip_merge("frane_poly_*_opendata.json", OUT_POLY, fix_poly=True)
+    print("Next: python3 scripts/build_iffi_chunks.py", flush=True)
 
 
 if __name__ == "__main__":
