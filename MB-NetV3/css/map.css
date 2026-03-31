@@ -7,7 +7,7 @@
   --accent: #3d8bfd;
   --accent-hover: #5ba3ff;
   --toolbar-h: 72px;
-  --foot-h: 120px;
+  --foot-h: 40px;
   --panel-w: 272px;
   --chrome-text: #18202c;
   --chrome-muted: #4a5568;
@@ -352,14 +352,14 @@ body.map-offset .leaflet-left .leaflet-control {
 }
 
 .foot-accent {
-  height: 2px;
+  height: 1px;
   width: 100%;
   background: linear-gradient(90deg, transparent, rgba(61, 139, 253, 0.35) 40%, rgba(13, 143, 110, 0.35) 60%, transparent);
   opacity: 0.65;
 }
 
 .foot-inner {
-  padding: 8px 14px 12px;
+  padding: 4px 12px 5px;
   max-width: 900px;
   margin: 0 auto;
 }
@@ -404,14 +404,15 @@ body.map-offset .leaflet-left .leaflet-control {
   color: #0d47a1;
 }
 
-/* Draggable attribute panel (IFFI click) */
+/* Draggable attribute panel (IFFI click); default anchored above footer, bottom-right */
 .detail-panel {
   position: fixed;
-  top: calc(var(--toolbar-h) + 12px);
+  top: auto;
+  bottom: calc(var(--foot-h) + 10px);
   right: 12px;
   left: auto;
   width: min(340px, calc(100vw - 24px));
-  max-height: calc(100vh - var(--toolbar-h) - var(--foot-h) - 20px);
+  max-height: calc(100vh - var(--toolbar-h) - var(--foot-h) - 28px);
   z-index: 1080;
   display: flex;
   flex-direction: column;

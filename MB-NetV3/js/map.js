@@ -230,7 +230,14 @@ function attachFeatureHandlers(feature, lyr, rec) {
 
 function createLeafletGeoJsonOptions(rec) {
   const options = {
-    style: rec.pathStyle,
+    // Path style must not apply palette stroke/fill to CircleMarkers (would look like green hollow rings).
+    style(feature) {
+      const t = feature?.geometry?.type;
+      if (rec.pointStyle && (t === "Point" || t === "MultiPoint")) {
+        return { ...rec.pointStyle };
+      }
+      return rec.pathStyle;
+    },
     onEachFeature(feature, lyr) {
       attachFeatureHandlers(feature, lyr, rec);
     },
@@ -241,6 +248,26 @@ function createLeafletGeoJsonOptions(rec) {
   return options;
 }
 
+/** Remove default L.Marker leaves (blue pin) if any slip through GeoJSON parsing; keeps CircleMarker/Path. */
+function removeStrayMarkersFromLayer(root) {
+  if (!root?.eachLayer) return;
+  const stack = [root];
+  while (stack.length) {
+    const g = stack.pop();
+    const victims = [];
+    g.eachLayer((lyr) => {
+      if (lyr instanceof L.Marker) {
+        victims.push(lyr);
+      } else if (typeof lyr.eachLayer === "function") {
+        stack.push(lyr);
+      }
+    });
+    for (const lyr of victims) {
+      g.removeLayer(lyr);
+    }
+  }
+}
+
 async function ensureLayerLoaded(id) {
   const rec = registry.get(id);
   if (!rec || rec.layer || rec.spec.tiled) return rec?.layer ?? null;
@@ -249,6 +276,7 @@ async function ensureLayerLoaded(id) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   const gj = L.geoJSON(data, createLeafletGeoJsonOptions(rec));
+  removeStrayMarkersFromLayer(gj);
 
   if (!rec.spec.noPopup && !rec.spec.detailPanel) {
     gj.eachLayer((lyr) => {
@@ -310,6 +338,7 @@ async function loadOneTile(rec, tileKey) {
   const data = await res.json();
   if (!rec.tileGroup || rec.loadedTiles.has(tileKey)) return;
   const sub = L.geoJSON(data, createLeafletGeoJsonOptions(rec));
+  removeStrayMarkersFromLayer(sub);
   rec.tileGroup.addLayer(sub);
   rec.loadedTiles.set(tileKey, sub);
 }
@@ -569,6 +598,10 @@ const detailCloseBtn = document.getElementById("detail-close");
 
 function openDetailPanel(layerLabel, properties) {
   if (!detailPanel || !detailAttrsEl || !detailTitleEl) return;
+  detailPanel.style.removeProperty("left");
+  detailPanel.style.removeProperty("top");
+  detailPanel.style.removeProperty("right");
+  detailPanel.style.removeProperty("bottom");
   detailTitleEl.textContent = layerLabel;
   detailAttrsEl.innerHTML = "";
   const keys = Object.keys(properties || {}).sort();
@@ -597,6 +630,7 @@ function syncDetailPanelToLeftTop() {
   if (!detailPanel) return;
   const r = detailPanel.getBoundingClientRect();
   detailPanel.style.right = "auto";
+  detailPanel.style.bottom = "auto";
   detailPanel.style.left = `${Math.round(r.left)}px`;
   detailPanel.style.top = `${Math.round(r.top)}px`;
 }
@@ -866,6 +900,8 @@ window.addEventListener("resize", () => {
   if (detailPanel && !detailPanel.classList.contains("hidden")) {
     const dr = detailPanel.getBoundingClientRect();
     const dc = clampDetailPanel(dr.left, dr.top);
+    detailPanel.style.right = "auto";
+    detailPanel.style.bottom = "auto";
     detailPanel.style.left = `${dc.left}px`;
     detailPanel.style.top = `${dc.top}px`;
   }
@@ -875,7 +911,7 @@ function syncFooterHeight() {
   const foot = document.querySelector(".site-foot");
   if (!foot) return;
   const h = Math.ceil(foot.getBoundingClientRect().height);
-  document.documentElement.style.setProperty("--foot-h", `${Math.max(h + 6, 72)}px`);
+  document.documentElement.style.setProperty("--foot-h", `${Math.max(h + 4, 24)}px`);
 }
 
 loadLayerManifest().finally(() => {
