@@ -28,6 +28,48 @@ body {
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   font-weight: 400;
   line-height: 1.6;
+  position: relative;
+}
+
+/* Landslide line-art watermark: right side, low contrast; gradient keeps copy legible on the left */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-color: #ffffff;
+  background-image: url("../layer/main_layer.png");
+  background-repeat: no-repeat;
+  background-position: right -2% bottom 8%;
+  background-size: min(62vw, 720px) auto;
+  opacity: 0.14;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    #ffffff 0%,
+    #ffffff max(18%, 12rem),
+    rgba(255, 255, 255, 0.97) 38%,
+    rgba(255, 255, 255, 0.82) 52%,
+    rgba(255, 255, 255, 0.48) 68%,
+    rgba(255, 255, 255, 0.15) 84%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+@media (max-width: 720px) {
+  body::before {
+    background-size: min(92vw, 420px) auto;
+    background-position: right -12% bottom -4%;
+    opacity: 0.09;
+  }
 }
 
 .site-header {
@@ -40,8 +82,10 @@ body {
   flex-wrap: wrap;
   gap: 0.75rem 1.5rem;
   padding: 0.85rem clamp(1rem, 4vw, 2rem);
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.92);
   border-bottom: 1px solid var(--chrome-border);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .site-brand {
@@ -77,6 +121,8 @@ body {
 }
 
 main {
+  position: relative;
+  z-index: 1;
   flex: 1;
   max-width: 44rem;
   width: 100%;
@@ -122,14 +168,12 @@ main {
   margin-bottom: 0;
 }
 
-.intro-body a {
-  color: var(--chrome-link);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.intro-body a:hover {
-  text-decoration: underline;
+.intro-quote {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  font-style: italic;
 }
 
 .intro-links {
@@ -176,9 +220,11 @@ main {
 .panel-card {
   padding: 1.25rem 1.35rem;
   border-radius: 12px;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.94);
   border: 1px solid var(--chrome-border);
   box-shadow: none;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .panel-card h3 {
@@ -218,6 +264,8 @@ main {
 }
 
 .site-footer {
+  position: relative;
+  z-index: 1;
   margin-top: auto;
   padding: 1.35rem clamp(1rem, 4vw, 2rem);
   text-align: center;
@@ -225,7 +273,9 @@ main {
   color: var(--chrome-text);
   opacity: 0.75;
   border-top: 1px solid var(--chrome-border);
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .footer-dot {
