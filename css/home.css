@@ -427,19 +427,27 @@ a.pub-title:focus-visible {
   opacity: 0.72;
 }
 
-.home-research-teaser {
-  margin: 0;
+.home-research {
   font-size: 0.92rem;
-  line-height: 1.55;
+  line-height: 1.58;
+  color: var(--chrome-text);
 }
 
-.home-research-teaser a {
+.home-research p {
+  margin: 0 0 0.85rem;
+}
+
+.home-research p:last-child {
+  margin-bottom: 0;
+}
+
+.home-research a {
   color: var(--chrome-link);
   font-weight: 600;
   text-decoration: none;
 }
 
-.home-research-teaser a:hover {
+.home-research a:hover {
   text-decoration: underline;
 }
 
