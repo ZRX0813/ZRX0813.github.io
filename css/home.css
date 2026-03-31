@@ -504,26 +504,6 @@ a.pub-title:focus-visible {
   box-shadow: 0 1px 4px rgba(13, 71, 161, 0.18);
 }
 
-.home-news {
-  font-size: 0.92rem;
-  line-height: 1.58;
-  color: var(--chrome-text);
-}
-
-.home-news p {
-  margin: 0;
-}
-
-.home-news a {
-  color: var(--chrome-link);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.home-news a:hover {
-  text-decoration: underline;
-}
-
 /* --- News subpage --- */
 .news-list {
   margin: 0;
