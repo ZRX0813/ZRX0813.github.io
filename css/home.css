@@ -382,12 +382,28 @@ main {
 }
 
 .pub-title {
+  display: block;
   margin: 0;
   font-size: 1rem;
   font-weight: 650;
   line-height: 1.45;
   letter-spacing: -0.015em;
   color: var(--chrome-text);
+  text-decoration: none;
+}
+
+a.pub-title:visited,
+a.pub-title:hover,
+a.pub-title:active {
+  color: var(--chrome-text);
+  text-decoration: none;
+}
+
+a.pub-title:focus-visible {
+  color: var(--chrome-text);
+  text-decoration: none;
+  outline: 2px solid var(--chrome-border);
+  outline-offset: 3px;
 }
 
 .pub-authors {
