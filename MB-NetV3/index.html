@@ -35,23 +35,55 @@
     </div>
   </div>
 
-  <footer class="site-foot">
-    <p class="attrib">
-      <a href="/">Home</a>
-      · Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer">OpenStreetMap</a>
-      · Geocoding © <a href="https://nominatim.org" rel="noopener noreferrer">Nominatim</a>
-    </p>
-    <p class="credits" id="gmba-credits">
-      <strong>GMBA mountain polygons:</strong>
-      Boundaries are from the
-      <a href="https://www.gmba.unibe.ch/tools/definitions/mountain_inventory_v2/index_eng.html" rel="noopener noreferrer">GMBA Mountain Inventory v2.0</a>
-      (Snethlage et al., 2022,
-      <a href="https://doi.org/10.1038/s41597-022-01256-y" rel="noopener noreferrer">Scientific Data</a>;
-      dataset
-      <a href="https://doi.org/10.48601/earthenv-t9k2-1407" rel="noopener noreferrer">doi:10.48601/earthenv-t9k2-1407</a>).
-      This map shows a geographic subset (Southern Apennines, Italy) derived from that product for visualization only; cite the paper and dataset when reusing the inventory.
-      Access via <a href="https://www.earthenv.org/mountains" rel="noopener noreferrer">EarthEnv</a>.
-    </p>
+  <footer class="site-foot" id="site-foot">
+    <div class="foot-accent" aria-hidden="true"></div>
+    <div class="foot-inner">
+      <nav class="foot-rail" aria-label="Map services">
+        <a class="foot-link" href="/">Home</a>
+        <span class="foot-divider" aria-hidden="true"></span>
+        <span class="foot-chip">Basemap</span>
+        <a class="foot-link" href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer">OpenStreetMap</a>
+        <span class="foot-divider" aria-hidden="true"></span>
+        <span class="foot-chip">Search</span>
+        <a class="foot-link" href="https://nominatim.org" rel="noopener noreferrer">Nominatim</a>
+      </nav>
+
+      <details class="foot-credits" id="foot-credits">
+        <summary class="foot-credits-sum">
+          <span class="foot-credits-icon" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+          </span>
+          <span>GMBA v2 · Southern Apennines subset · citation</span>
+          <span class="foot-credits-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="foot-credits-box">
+          <p class="foot-credits-lead">
+            Polygon outline is a <strong>single merged feature</strong> derived for visualization from the
+            <a href="https://www.gmba.unibe.ch/tools/definitions/mountain_inventory_v2/index_eng.html" rel="noopener noreferrer">GMBA Mountain Inventory v2.0</a>
+            (Southern Apennines, Italy). For research use, cite the original publication and dataset; follow the license of the source release.
+          </p>
+          <ul class="foot-cite">
+            <li>
+              <span class="foot-cite-lbl">Paper</span>
+              Snethlage et al. (2022). <em>Scientific Data</em>.
+              <a href="https://doi.org/10.1038/s41597-022-01256-y" rel="noopener noreferrer">10.1038/s41597-022-01256-y</a>
+            </li>
+            <li>
+              <span class="foot-cite-lbl">Dataset</span>
+              GMBA Mountain Inventory v2 (EarthEnv).
+              <a href="https://doi.org/10.48601/earthenv-t9k2-1407" rel="noopener noreferrer">10.48601/earthenv-t9k2-1407</a>
+            </li>
+            <li>
+              <span class="foot-cite-lbl">Access</span>
+              <a href="https://www.earthenv.org/mountains" rel="noopener noreferrer">EarthEnv mountains</a>
+            </li>
+          </ul>
+        </div>
+      </details>
+    </div>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

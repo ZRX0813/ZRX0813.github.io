@@ -5,7 +5,8 @@
       "label": "GMBA Southern Apennines (Italy)",
       "geojson": "data/gmba_southern_apennines_italy.geojson",
       "defaultEnabled": true,
-      "fitOnLoad": true
+      "fitOnLoad": true,
+      "noPopup": true
     }
   ]
 }

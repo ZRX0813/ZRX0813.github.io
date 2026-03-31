@@ -46,6 +46,7 @@ function escapeHtml(s) {
  * @property {string} geojson
  * @property {boolean} [defaultEnabled]
  * @property {boolean} [fitOnLoad]
+ * @property {boolean} [noPopup]
  */
 const registry = new Map();
 
@@ -59,20 +60,24 @@ async function ensureLayerLoaded(id) {
   const gj = L.geoJSON(data, {
     style: rec.style,
     onEachFeature(feature, lyr) {
-      const props =
-        feature.properties && Object.keys(feature.properties).length
-          ? `<pre class="popup-props">${escapeHtml(JSON.stringify(feature.properties, null, 2))}</pre>`
-          : "";
-      lyr.bindPopup(`<strong>${escapeHtml(rec.spec.label)}</strong>${props}`);
+      if (!rec.spec.noPopup) {
+        const props =
+          feature.properties && Object.keys(feature.properties).length
+            ? `<pre class="popup-props">${escapeHtml(JSON.stringify(feature.properties, null, 2))}</pre>`
+            : "";
+        lyr.bindPopup(`<strong>${escapeHtml(rec.spec.label)}</strong>${props}`);
+      }
       lyr.on("mouseover", () => lyr.setStyle({ ...rec.style, weight: rec.style.weight + 1, fillOpacity: Math.min(0.45, rec.style.fillOpacity + 0.2) }));
       lyr.on("mouseout", () => lyr.setStyle(rec.style));
     },
   });
-  gj.eachLayer((lyr) => {
-    if (!lyr.feature && lyr.getLatLng) {
-      lyr.bindPopup(`<strong>${escapeHtml(rec.spec.label)}</strong>`);
-    }
-  });
+  if (!rec.spec.noPopup) {
+    gj.eachLayer((lyr) => {
+      if (!lyr.feature && lyr.getLatLng) {
+        lyr.bindPopup(`<strong>${escapeHtml(rec.spec.label)}</strong>`);
+      }
+    });
+  }
   rec.layer = gj;
   if (rec.spec.fitOnLoad && !rec.didFit) {
     const b = gj.getBounds();
@@ -386,6 +391,7 @@ loadLayerManifest().finally(() => {
     if (foot && typeof ResizeObserver !== "undefined") {
       new ResizeObserver(syncFooterHeight).observe(foot);
     }
+    document.getElementById("foot-credits")?.addEventListener("toggle", syncFooterHeight);
   });
 });
 window.addEventListener("resize", syncFooterHeight);
