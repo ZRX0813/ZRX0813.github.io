@@ -6,9 +6,12 @@ const TILE_DEBOUNCE_MS = 280;
 const MAX_TILES_IN_VIEW = 36;
 const TILE_FETCH_CONCURRENCY = 5;
 
-const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+/** Positron (OSM data): lighter cartography than standard OSM tiles; national borders are much less prominent. */
+const osm = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png", {
+  maxZoom: 20,
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains: "abcd",
 });
 
 const map = L.map("map", {
