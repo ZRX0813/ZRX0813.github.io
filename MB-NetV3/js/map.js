@@ -37,7 +37,16 @@ function escapeHtml(s) {
   return div.innerHTML;
 }
 
-/** @type {Map<string, { layer: L.GeoJSON | null, spec: { id: string, label: string, geojson: string }, style: object }>} */
+/** @type {Map<string, { layer: L.GeoJSON | null, spec: LayerSpec, style: object, didFit?: boolean }>} */
+
+/**
+ * @typedef {object} LayerSpec
+ * @property {string} id
+ * @property {string} label
+ * @property {string} geojson
+ * @property {boolean} [defaultEnabled]
+ * @property {boolean} [fitOnLoad]
+ */
 const registry = new Map();
 
 async function ensureLayerLoaded(id) {
@@ -65,6 +74,13 @@ async function ensureLayerLoaded(id) {
     }
   });
   rec.layer = gj;
+  if (rec.spec.fitOnLoad && !rec.didFit) {
+    const b = gj.getBounds();
+    if (b.isValid()) {
+      map.fitBounds(b.pad(0.08));
+      rec.didFit = true;
+    }
+  }
   return gj;
 }
 
@@ -113,7 +129,7 @@ function renderToggles(layers) {
   document.body.classList.add("map-offset");
 
   layers.forEach((spec, idx) => {
-    registry.set(spec.id, { layer: null, spec, style: styleForIndex(idx) });
+    registry.set(spec.id, { layer: null, spec, style: styleForIndex(idx), didFit: false });
 
     const row = document.createElement("div");
     row.className = "toggle-row";
@@ -122,6 +138,7 @@ function renderToggles(layers) {
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.id = `layer-${spec.id}`;
+    cb.checked = Boolean(spec.defaultEnabled);
     cb.addEventListener("change", () => setOverlayVisible(spec.id, cb.checked));
 
     const lab = document.createElement("label");
@@ -130,6 +147,10 @@ function renderToggles(layers) {
 
     row.append(cb, lab);
     host.appendChild(row);
+
+    if (spec.defaultEnabled) {
+      setOverlayVisible(spec.id, true);
+    }
   });
 }
 
@@ -351,4 +372,20 @@ window.addEventListener("resize", () => {
   }
 });
 
-loadLayerManifest();
+function syncFooterHeight() {
+  const foot = document.querySelector(".site-foot");
+  if (!foot) return;
+  const h = Math.ceil(foot.getBoundingClientRect().height);
+  document.documentElement.style.setProperty("--foot-h", `${Math.max(h + 6, 72)}px`);
+}
+
+loadLayerManifest().finally(() => {
+  requestAnimationFrame(() => {
+    syncFooterHeight();
+    const foot = document.querySelector(".site-foot");
+    if (foot && typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(syncFooterHeight).observe(foot);
+    }
+  });
+});
+window.addEventListener("resize", syncFooterHeight);

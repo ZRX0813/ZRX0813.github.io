@@ -35,11 +35,24 @@
     </div>
   </div>
 
-  <p class="attrib">
-    <a href="/">Home</a>
-    · Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer">OpenStreetMap</a>
-    · Geocoding © <a href="https://nominatim.org" rel="noopener noreferrer">Nominatim</a>
-  </p>
+  <footer class="site-foot">
+    <p class="attrib">
+      <a href="/">Home</a>
+      · Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer">OpenStreetMap</a>
+      · Geocoding © <a href="https://nominatim.org" rel="noopener noreferrer">Nominatim</a>
+    </p>
+    <p class="credits" id="gmba-credits">
+      <strong>GMBA mountain polygons:</strong>
+      Boundaries are from the
+      <a href="https://www.gmba.unibe.ch/tools/definitions/mountain_inventory_v2/index_eng.html" rel="noopener noreferrer">GMBA Mountain Inventory v2.0</a>
+      (Snethlage et al., 2022,
+      <a href="https://doi.org/10.1038/s41597-022-01256-y" rel="noopener noreferrer">Scientific Data</a>;
+      dataset
+      <a href="https://doi.org/10.48601/earthenv-t9k2-1407" rel="noopener noreferrer">doi:10.48601/earthenv-t9k2-1407</a>).
+      This map shows a geographic subset (Southern Apennines, Italy) derived from that product for visualization only; cite the paper and dataset when reusing the inventory.
+      Access via <a href="https://www.earthenv.org/mountains" rel="noopener noreferrer">EarthEnv</a>.
+    </p>
+  </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="js/map.js" type="module"></script>
