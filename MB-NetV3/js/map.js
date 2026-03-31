@@ -12,6 +12,7 @@ const map = L.map("map", {
   zoom: ITALY_ZOOM,
   layers: [osm],
   zoomControl: true,
+  preferCanvas: true,
 });
 
 L.control.scale({ imperial: false, metric: true }).addTo(map);
@@ -31,13 +32,45 @@ function styleForIndex(i) {
   };
 }
 
+/**
+ * @param {LayerSpec} spec
+ * @param {number} idx
+ * @returns {{ pathStyle: object, pointStyle: object | null }}
+ */
+function stylesForSpec(spec, idx) {
+  if (spec.pointRadius != null || spec.id.includes("piff")) {
+    return {
+      pathStyle: styleForIndex(idx),
+      pointStyle: {
+        radius: spec.pointRadius ?? 4,
+        color: "#9a3412",
+        weight: 1,
+        fillColor: "#fb923c",
+        fillOpacity: 0.82,
+        opacity: 0.95,
+      },
+    };
+  }
+  if (spec.id.includes("iffi_poly")) {
+    return {
+      pathStyle: {
+        color: "#b45309",
+        weight: 1.2,
+        opacity: 0.92,
+        fillColor: "#fbbf24",
+        fillOpacity: 0.22,
+      },
+      pointStyle: null,
+    };
+  }
+  return { pathStyle: styleForIndex(idx), pointStyle: null };
+}
+
 function escapeHtml(s) {
   const div = document.createElement("div");
   div.textContent = s;
   return div.innerHTML;
 }
-
-/** @type {Map<string, { layer: L.GeoJSON | null, spec: LayerSpec, style: object, didFit?: boolean }>} */
 
 /**
  * @typedef {object} LayerSpec
@@ -47,8 +80,28 @@ function escapeHtml(s) {
  * @property {boolean} [defaultEnabled]
  * @property {boolean} [fitOnLoad]
  * @property {boolean} [noPopup]
+ * @property {boolean} [detailPanel]
+ * @property {number} [pointRadius]
  */
+
+/** @type {Map<string, { layer: L.GeoJSON | null, spec: LayerSpec, pathStyle: object, pointStyle: object | null, didFit?: boolean }>} */
 const registry = new Map();
+
+function bindVectorHover(lyr, baseStyle, isPoint) {
+  if (isPoint) {
+    lyr.on("mouseover", () => lyr.setStyle({ ...baseStyle, weight: 2, fillOpacity: 1 }));
+    lyr.on("mouseout", () => lyr.setStyle(baseStyle));
+  } else if (lyr.setStyle) {
+    lyr.on("mouseover", () =>
+      lyr.setStyle({
+        ...baseStyle,
+        weight: (baseStyle.weight || 2) + 1,
+        fillOpacity: Math.min(0.45, (baseStyle.fillOpacity || 0.18) + 0.2),
+      })
+    );
+    lyr.on("mouseout", () => lyr.setStyle(baseStyle));
+  }
+}
 
 async function ensureLayerLoaded(id) {
   const rec = registry.get(id);
@@ -57,27 +110,50 @@ async function ensureLayerLoaded(id) {
   const res = await fetch(url, { credentials: "same-origin" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
-  const gj = L.geoJSON(data, {
-    style: rec.style,
+
+  const options = {
+    style: rec.pathStyle,
     onEachFeature(feature, lyr) {
-      if (!rec.spec.noPopup) {
+      const spec = rec.spec;
+      const isPoint = feature.geometry?.type === "Point";
+      const styleBase = isPoint && rec.pointStyle ? rec.pointStyle : rec.pathStyle;
+
+      if (spec.detailPanel && feature.properties) {
+        lyr.on("click", (e) => {
+          L.DomEvent.stopPropagation(e);
+          openDetailPanel(spec.label, feature.properties);
+          if (e.latlng) map.panTo(e.latlng, { animate: true });
+        });
+      } else if (!spec.noPopup) {
         const props =
           feature.properties && Object.keys(feature.properties).length
             ? `<pre class="popup-props">${escapeHtml(JSON.stringify(feature.properties, null, 2))}</pre>`
             : "";
-        lyr.bindPopup(`<strong>${escapeHtml(rec.spec.label)}</strong>${props}`);
+        lyr.bindPopup(`<strong>${escapeHtml(spec.label)}</strong>${props}`);
       }
-      lyr.on("mouseover", () => lyr.setStyle({ ...rec.style, weight: rec.style.weight + 1, fillOpacity: Math.min(0.45, rec.style.fillOpacity + 0.2) }));
-      lyr.on("mouseout", () => lyr.setStyle(rec.style));
+
+      if (isPoint) {
+        bindVectorHover(lyr, rec.pointStyle, true);
+      } else {
+        bindVectorHover(lyr, rec.pathStyle, false);
+      }
     },
-  });
-  if (!rec.spec.noPopup) {
+  };
+
+  if (rec.pointStyle) {
+    options.pointToLayer = (feature, latlng) => L.circleMarker(latlng, { ...rec.pointStyle });
+  }
+
+  const gj = L.geoJSON(data, options);
+
+  if (!rec.spec.noPopup && !rec.spec.detailPanel) {
     gj.eachLayer((lyr) => {
       if (!lyr.feature && lyr.getLatLng) {
         lyr.bindPopup(`<strong>${escapeHtml(rec.spec.label)}</strong>`);
       }
     });
   }
+
   rec.layer = gj;
   if (rec.spec.fitOnLoad && !rec.didFit) {
     const b = gj.getBounds();
@@ -134,7 +210,8 @@ function renderToggles(layers) {
   document.body.classList.add("map-offset");
 
   layers.forEach((spec, idx) => {
-    registry.set(spec.id, { layer: null, spec, style: styleForIndex(idx), didFit: false });
+    const { pathStyle, pointStyle } = stylesForSpec(spec, idx);
+    registry.set(spec.id, { layer: null, spec, pathStyle, pointStyle, didFit: false });
 
     const row = document.createElement("div");
     row.className = "toggle-row";
@@ -175,7 +252,109 @@ async function loadLayerManifest() {
   renderToggles(list);
 }
 
-/** Nominatim — use responsibly per https://operations.osmfoundation.org/policies/nominatim/ */
+/** --- Detail panel (draggable, no Leaflet popup) --- */
+const detailPanel = document.getElementById("detail-panel");
+const detailDragHandle = document.getElementById("detail-drag-handle");
+const detailTitleEl = document.getElementById("detail-panel-title");
+const detailAttrsEl = document.getElementById("detail-attrs");
+const detailCloseBtn = document.getElementById("detail-close");
+
+function openDetailPanel(layerLabel, properties) {
+  if (!detailPanel || !detailAttrsEl || !detailTitleEl) return;
+  detailTitleEl.textContent = layerLabel;
+  detailAttrsEl.innerHTML = "";
+  const keys = Object.keys(properties || {}).sort();
+  for (const k of keys) {
+    const dt = document.createElement("dt");
+    dt.textContent = k;
+    const dd = document.createElement("dd");
+    const v = properties[k];
+    dd.textContent = v == null ? "—" : typeof v === "object" ? JSON.stringify(v) : String(v);
+    detailAttrsEl.appendChild(dt);
+    detailAttrsEl.appendChild(dd);
+  }
+  detailPanel.classList.remove("hidden");
+  window.requestAnimationFrame(syncFooterHeight);
+}
+
+function closeDetailPanel() {
+  detailPanel?.classList.add("hidden");
+  window.requestAnimationFrame(syncFooterHeight);
+}
+
+detailCloseBtn?.addEventListener("click", () => closeDetailPanel());
+
+function syncDetailPanelToLeftTop() {
+  if (!detailPanel) return;
+  const r = detailPanel.getBoundingClientRect();
+  detailPanel.style.right = "auto";
+  detailPanel.style.left = `${Math.round(r.left)}px`;
+  detailPanel.style.top = `${Math.round(r.top)}px`;
+}
+
+function clampDetailPanel(left, top) {
+  const pad = 8;
+  const el = detailPanel;
+  if (!el) return { left, top };
+  const r = el.getBoundingClientRect();
+  const maxL = window.innerWidth - r.width - pad;
+  const maxT = window.innerHeight - r.height - pad;
+  const tb = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--toolbar-h")) || 72;
+  const fb = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--foot-h")) || 72;
+  return {
+    left: Math.min(Math.max(pad, left), Math.max(pad, maxL)),
+    top: Math.min(Math.max(tb + pad, top), Math.max(tb + pad, maxT - fb * 0.25)),
+  };
+}
+
+let detailDragPtr = null;
+let detailDragStartX = 0;
+let detailDragStartY = 0;
+let detailOriginLeft = 0;
+let detailOriginTop = 0;
+
+function onDetailDragMove(e) {
+  if (detailDragPtr == null || e.pointerId !== detailDragPtr) return;
+  const dx = e.clientX - detailDragStartX;
+  const dy = e.clientY - detailDragStartY;
+  const next = clampDetailPanel(detailOriginLeft + dx, detailOriginTop + dy);
+  detailPanel.style.left = `${next.left}px`;
+  detailPanel.style.top = `${next.top}px`;
+}
+
+function onDetailDragEnd(e) {
+  if (detailDragPtr == null || e.pointerId !== detailDragPtr) return;
+  detailDragPtr = null;
+  try {
+    detailDragHandle.releasePointerCapture(e.pointerId);
+  } catch {
+    /* ignore */
+  }
+  document.removeEventListener("pointermove", onDetailDragMove);
+  document.removeEventListener("pointerup", onDetailDragEnd);
+  document.removeEventListener("pointercancel", onDetailDragEnd);
+}
+
+detailDragHandle?.addEventListener("pointerdown", (e) => {
+  if (e.pointerType === "mouse" && e.button !== 0) return;
+  e.preventDefault();
+  syncDetailPanelToLeftTop();
+  detailOriginLeft = detailPanel.getBoundingClientRect().left;
+  detailOriginTop = detailPanel.getBoundingClientRect().top;
+  detailDragStartX = e.clientX;
+  detailDragStartY = e.clientY;
+  detailDragPtr = e.pointerId;
+  try {
+    detailDragHandle.setPointerCapture(e.pointerId);
+  } catch {
+    /* ignore */
+  }
+  document.addEventListener("pointermove", onDetailDragMove);
+  document.addEventListener("pointerup", onDetailDragEnd);
+  document.addEventListener("pointercancel", onDetailDragEnd);
+});
+
+/** Nominatim */
 async function searchPlaces(query) {
   const q = query.trim();
   if (!q) return [];
@@ -290,7 +469,7 @@ document.addEventListener("click", (e) => {
   if (!searchFloat?.contains(e.target)) hideResults();
 });
 
-/** Draggable search panel (pointer events; no close control) */
+/** Search float drag */
 function syncSearchFloatBox() {
   if (!searchFloat || !mapWrap) return;
   const r = searchFloat.getBoundingClientRect();
@@ -366,6 +545,7 @@ searchDragHandle?.addEventListener("pointerdown", (e) => {
 
 window.addEventListener("resize", () => {
   if (!searchFloat || !mapWrap) return;
+  const w = mapWrap.getBoundingClientRect();
   const r = searchFloat.getBoundingClientRect();
   const left = r.left - w.left;
   const top = r.top - w.top;
@@ -374,6 +554,12 @@ window.addEventListener("resize", () => {
     searchFloat.style.left = `${c.left}px`;
     searchFloat.style.top = `${c.top}px`;
     searchFloat.style.right = "auto";
+  }
+  if (detailPanel && !detailPanel.classList.contains("hidden")) {
+    const dr = detailPanel.getBoundingClientRect();
+    const dc = clampDetailPanel(dr.left, dr.top);
+    detailPanel.style.left = `${dc.left}px`;
+    detailPanel.style.top = `${dc.top}px`;
   }
 });
 
@@ -392,6 +578,7 @@ loadLayerManifest().finally(() => {
       new ResizeObserver(syncFooterHeight).observe(foot);
     }
     document.getElementById("foot-credits")?.addEventListener("toggle", syncFooterHeight);
+    document.getElementById("foot-credits-iffi")?.addEventListener("toggle", syncFooterHeight);
   });
 });
 window.addEventListener("resize", syncFooterHeight);

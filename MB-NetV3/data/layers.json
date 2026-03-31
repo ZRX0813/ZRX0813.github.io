@@ -7,6 +7,23 @@
       "defaultEnabled": true,
       "fitOnLoad": true,
       "noPopup": true
+    },
+    {
+      "id": "iffi_piff_cmba",
+      "label": "IFFI — PIFF points (CMBA extent)",
+      "geojson": "data/iffi_piff_cmba.geojson",
+      "defaultEnabled": false,
+      "noPopup": true,
+      "detailPanel": true,
+      "pointRadius": 4
+    },
+    {
+      "id": "iffi_poly_cmba",
+      "label": "IFFI — landslide polygons (CMBA extent)",
+      "geojson": "data/iffi_poly_cmba.geojson",
+      "defaultEnabled": false,
+      "noPopup": true,
+      "detailPanel": true
     }
   ]
 }

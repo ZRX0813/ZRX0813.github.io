@@ -33,6 +33,19 @@
         <div class="search-results hidden" id="search-results" role="listbox" aria-label="Search results"></div>
       </div>
     </div>
+
+    <aside class="detail-panel hidden" id="detail-panel" role="complementary" aria-label="Feature attributes">
+      <div class="detail-panel-head">
+        <div class="detail-panel-handle" id="detail-drag-handle" title="Drag to move">
+          <span class="detail-grip" aria-hidden="true"></span>
+          <span class="detail-panel-title" id="detail-panel-title">Feature</span>
+        </div>
+        <button type="button" class="detail-close" id="detail-close" aria-label="Close panel">×</button>
+      </div>
+      <div class="detail-panel-body">
+        <dl class="detail-attrs" id="detail-attrs"></dl>
+      </div>
+    </aside>
   </div>
 
   <footer class="site-foot" id="site-foot">
@@ -79,6 +92,41 @@
             <li>
               <span class="foot-cite-lbl">Access</span>
               <a href="https://www.earthenv.org/mountains" rel="noopener noreferrer">EarthEnv mountains</a>
+            </li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="foot-credits foot-credits--iffi" id="foot-credits-iffi">
+        <summary class="foot-credits-sum">
+          <span class="foot-credits-icon foot-credits-icon--amber" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </span>
+          <span>IFFI · Italian landslide inventory · citation</span>
+          <span class="foot-credits-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="foot-credits-box">
+          <p class="foot-credits-lead">
+            <strong>IFFI</strong> (<em>Inventario dei Fenomeni Franosi in Italia</em>) is the national landslide inventory coordinated by
+            <a href="https://www.isprambiente.gov.it/" rel="noopener noreferrer">ISPRA</a>
+            with Italy’s regions and autonomous provinces. Points (<strong>PIFF</strong>) and polygon footprints on this map are
+            <strong>open-data extracts</strong> clipped to the Southern Apennines (GMBA) mask for context; they are not the live national database.
+            Use official IFFI services for authoritative data and licensing.
+          </p>
+          <ul class="foot-cite">
+            <li>
+              <span class="foot-cite-lbl">Portal</span>
+              <a href="https://www.progettoiffi.isprambiente.it/?lang=en" rel="noopener noreferrer">Progetto IFFI (ISPRA)</a>
+            </li>
+            <li>
+              <span class="foot-cite-lbl">Context</span>
+              <a href="https://indicatoriambientali.isprambiente.it/en/landslide-hazard/italian-landslide-inventory-iffi" rel="noopener noreferrer">Environmental indicators · IFFI overview</a>
+            </li>
+            <li>
+              <span class="foot-cite-lbl">Note</span>
+              <span>Attribute fields follow regional open-data releases (e.g. <code>id_frana</code>, movement type, municipality). Cite ISPRA / IFFI and the original download when publishing derivative work.</span>
             </li>
           </ul>
         </div>
