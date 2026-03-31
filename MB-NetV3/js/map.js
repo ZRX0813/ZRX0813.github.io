@@ -15,11 +15,11 @@ const map = L.map("map", {
   center: ITALY_CENTER,
   zoom: ITALY_ZOOM,
   layers: [osm],
-  zoomControl: true,
+  zoomControl: false,
   preferCanvas: true,
 });
 
-L.control.scale({ imperial: false, metric: true }).addTo(map);
+L.control.scale({ imperial: false, metric: true, position: "bottomright" }).addTo(map);
 
 const overlayRoot = L.layerGroup().addTo(map);
 
@@ -82,6 +82,10 @@ function escapeHtml(s) {
  * @property {boolean} [detailPanel]
  * @property {number} [pointRadius]
  * @property {{ indexUrl: string, urlTemplate: string }} [tiled]
+ * @property {boolean} [noHover]
+ * @property {boolean} [folder]
+ * @property {LayerSpec[]} [children]
+ * @property {boolean} [defaultOpen]
  */
 
 /**
@@ -100,6 +104,20 @@ function escapeHtml(s) {
 
 /** @type {Map<string, LayerRec>} */
 const registry = new Map();
+
+/** @type {{ lyr: L.CircleMarker, baseStyle: object } | null} */
+let exclusivePointSelection = null;
+
+function clearExclusivePointSelection() {
+  if (exclusivePointSelection) {
+    exclusivePointSelection.lyr.setStyle(exclusivePointSelection.baseStyle);
+    exclusivePointSelection = null;
+  }
+}
+
+map.on("click", () => {
+  clearExclusivePointSelection();
+});
 
 function lon2tileX(lon, z) {
   return Math.floor(((lon + 180) / 360) * 2 ** z);
@@ -164,11 +182,44 @@ function attachFeatureHandlers(feature, lyr, rec) {
   const isPoint = feature.geometry?.type === "Point";
 
   if (spec.detailPanel && feature.properties) {
-    lyr.on("click", (e) => {
-      L.DomEvent.stopPropagation(e);
-      openDetailPanel(spec.label, feature.properties);
-      if (e.latlng) map.panTo(e.latlng, { animate: true });
-    });
+    if (isPoint && rec.pointStyle) {
+      const baseStyle = { ...rec.pointStyle };
+      const hoverStyle = { ...baseStyle, weight: 2, fillOpacity: 1 };
+      const selectedStyle = {
+        ...baseStyle,
+        weight: 3,
+        fillColor: "#ea580c",
+        color: "#431407",
+        fillOpacity: 1,
+        opacity: 1,
+      };
+      lyr.on("mouseover", () => {
+        if (!exclusivePointSelection || exclusivePointSelection.lyr !== lyr) {
+          lyr.setStyle(hoverStyle);
+        }
+      });
+      lyr.on("mouseout", () => {
+        if (!exclusivePointSelection || exclusivePointSelection.lyr !== lyr) {
+          lyr.setStyle(baseStyle);
+        } else {
+          lyr.setStyle(selectedStyle);
+        }
+      });
+      lyr.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        clearExclusivePointSelection();
+        exclusivePointSelection = { lyr, baseStyle };
+        lyr.setStyle(selectedStyle);
+        openDetailPanel(spec.label, feature.properties);
+        if (e.latlng) map.panTo(e.latlng, { animate: true });
+      });
+    } else {
+      lyr.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        openDetailPanel(spec.label, feature.properties);
+        if (e.latlng) map.panTo(e.latlng, { animate: true });
+      });
+    }
   } else if (!spec.noPopup) {
     const props =
       feature.properties && Object.keys(feature.properties).length
@@ -177,6 +228,12 @@ function attachFeatureHandlers(feature, lyr, rec) {
     lyr.bindPopup(`<strong>${escapeHtml(spec.label)}</strong>${props}`);
   }
 
+  if (spec.noHover) {
+    return;
+  }
+  if (spec.detailPanel && isPoint && rec.pointStyle) {
+    return;
+  }
   if (isPoint && rec.pointStyle) {
     bindVectorHover(lyr, rec.pointStyle, true);
   } else {
@@ -352,6 +409,7 @@ function setOverlayVisible(id, on) {
 
   if (rec.spec.tiled) {
     if (!on) {
+      if (id === "iffi_piff_cmba") clearExclusivePointSelection();
       disableTiledLayer(id);
       row?.querySelector(".err")?.remove();
       return;
@@ -362,6 +420,7 @@ function setOverlayVisible(id, on) {
   }
 
   if (!on) {
+    if (id === "iffi_piff_cmba") clearExclusivePointSelection();
     if (rec.layer) overlayRoot.removeLayer(rec.layer);
     if (row) row.querySelector(".err")?.remove();
     return;
@@ -388,6 +447,7 @@ function setOverlayVisible(id, on) {
 }
 
 function renderToggles(layers) {
+  clearExclusivePointSelection();
   for (const rec of registry.values()) {
     if (rec.refreshHandler) {
       map.off("moveend", rec.refreshHandler);
@@ -417,7 +477,12 @@ function renderToggles(layers) {
   panel.classList.remove("hidden");
   document.body.classList.add("map-offset");
 
-  layers.forEach((spec, idx) => {
+  let styleIdx = 0;
+
+  function registerLeaf(spec) {
+    if (!spec?.id || !(spec.geojson || spec.tiled)) return;
+    const idx = styleIdx;
+    styleIdx += 1;
     const { pathStyle, pointStyle } = stylesForSpec(spec, idx);
     registry.set(spec.id, {
       spec,
@@ -447,12 +512,49 @@ function renderToggles(layers) {
     lab.textContent = spec.label || spec.id;
 
     row.append(cb, lab);
-    host.appendChild(row);
+    return row;
+  }
 
-    if (spec.defaultEnabled) {
-      setOverlayVisible(spec.id, true);
+  for (const item of layers) {
+    if (item.folder && Array.isArray(item.children)) {
+      const details = document.createElement("details");
+      details.className = "layer-folder";
+      if (item.defaultOpen !== false) details.open = true;
+
+      const summary = document.createElement("summary");
+      summary.className = "layer-folder-sum";
+      summary.textContent = item.label || item.id || "Layers";
+      details.appendChild(summary);
+
+      const body = document.createElement("div");
+      body.className = "layer-folder-body";
+      for (const child of item.children) {
+        const row = registerLeaf(child);
+        if (row) body.appendChild(row);
+      }
+      if (body.childElementCount > 0) {
+        details.appendChild(body);
+        host.appendChild(details);
+      }
+    } else {
+      const row = registerLeaf(item);
+      if (row) host.appendChild(row);
     }
-  });
+  }
+
+  for (const rec of registry.values()) {
+    if (rec.spec.defaultEnabled) {
+      setOverlayVisible(rec.spec.id, true);
+    }
+  }
+}
+
+function manifestEntryValid(x) {
+  if (!x || !x.id) return false;
+  if (x.folder && Array.isArray(x.children)) {
+    return x.children.some((c) => c && c.id && (c.geojson || c.tiled));
+  }
+  return Boolean(x.geojson || x.tiled);
 }
 
 async function loadLayerManifest() {
@@ -463,7 +565,7 @@ async function loadLayerManifest() {
     if (res.ok) {
       const data = await res.json();
       const raw = Array.isArray(data.layers) ? data.layers : [];
-      list = raw.filter((x) => x && x.id && (x.geojson || x.tiled));
+      list = raw.filter(manifestEntryValid);
     }
   } catch {
     /* optional manifest */
@@ -497,6 +599,7 @@ function openDetailPanel(layerLabel, properties) {
 }
 
 function closeDetailPanel() {
+  clearExclusivePointSelection();
   detailPanel?.classList.add("hidden");
   window.requestAnimationFrame(syncFooterHeight);
 }
@@ -795,8 +898,6 @@ loadLayerManifest().finally(() => {
     if (foot && typeof ResizeObserver !== "undefined") {
       new ResizeObserver(syncFooterHeight).observe(foot);
     }
-    document.getElementById("foot-credits")?.addEventListener("toggle", syncFooterHeight);
-    document.getElementById("foot-credits-iffi")?.addEventListener("toggle", syncFooterHeight);
   });
 });
 window.addEventListener("resize", syncFooterHeight);

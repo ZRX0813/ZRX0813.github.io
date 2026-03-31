@@ -2,34 +2,43 @@
   "layers": [
     {
       "id": "gmba_southern_apennines",
-      "label": "GMBA Southern Apennines (Italy)",
+      "label": "GMBA Layer",
       "geojson": "data/gmba_southern_apennines_italy.geojson",
       "defaultEnabled": true,
       "fitOnLoad": true,
-      "noPopup": true
+      "noPopup": true,
+      "noHover": true
     },
     {
-      "id": "iffi_piff_cmba",
-      "label": "IFFI — PIFF points (CMBA, tiled)",
-      "defaultEnabled": false,
-      "noPopup": true,
-      "detailPanel": true,
-      "pointRadius": 4,
-      "tiled": {
-        "indexUrl": "data/chunks/iffi_piff/index.json",
-        "urlTemplate": "data/chunks/iffi_piff/{z}/{tile}.geojson"
-      }
-    },
-    {
-      "id": "iffi_poly_cmba",
-      "label": "IFFI — landslide polygons (CMBA, tiled)",
-      "defaultEnabled": false,
-      "noPopup": true,
-      "detailPanel": true,
-      "tiled": {
-        "indexUrl": "data/chunks/iffi_poly/index.json",
-        "urlTemplate": "data/chunks/iffi_poly/{z}/{tile}.geojson"
-      }
+      "id": "iffi_group",
+      "label": "IFFI Layer",
+      "folder": true,
+      "defaultOpen": true,
+      "children": [
+        {
+          "id": "iffi_piff_cmba",
+          "label": "Landslide Points Layer",
+          "defaultEnabled": false,
+          "noPopup": true,
+          "detailPanel": true,
+          "pointRadius": 4,
+          "tiled": {
+            "indexUrl": "data/chunks/iffi_piff/index.json",
+            "urlTemplate": "data/chunks/iffi_piff/{z}/{tile}.geojson"
+          }
+        },
+        {
+          "id": "iffi_poly_cmba",
+          "label": "Landslide Polygons Layer",
+          "defaultEnabled": false,
+          "noPopup": true,
+          "detailPanel": true,
+          "tiled": {
+            "indexUrl": "data/chunks/iffi_poly/index.json",
+            "urlTemplate": "data/chunks/iffi_poly/{z}/{tile}.geojson"
+          }
+        }
+      ]
     }
   ]
 }

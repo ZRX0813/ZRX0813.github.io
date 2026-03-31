@@ -282,6 +282,38 @@ body.map-offset .leaflet-left .leaflet-control {
   color: var(--chrome-text);
 }
 
+.layer-folder {
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  overflow: hidden;
+}
+
+.layer-folder-sum {
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--chrome-text);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.layer-folder-sum::-webkit-details-marker {
+  display: none;
+}
+
+.layer-folder-body {
+  padding: 0 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.layer-folder-body .toggle-row {
+  margin: 0;
+}
+
 .leaflet-container {
   font-family: inherit;
 }
@@ -370,148 +402,6 @@ body.map-offset .leaflet-left .leaflet-control {
 
 .foot-link:hover {
   color: #0d47a1;
-}
-
-.foot-credits {
-  margin: 10px 0 0;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.42);
-  overflow: hidden;
-  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.05);
-}
-
-.foot-credits--iffi {
-  margin-top: 8px;
-}
-
-.foot-credits-icon--amber {
-  color: #d97706;
-}
-
-.foot-credits-sum {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  cursor: pointer;
-  list-style: none;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--chrome-muted);
-  user-select: none;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.foot-credits-sum::-webkit-details-marker {
-  display: none;
-}
-
-.foot-credits-sum:hover {
-  background: rgba(61, 139, 253, 0.08);
-  color: var(--chrome-text);
-}
-
-.foot-credits-icon {
-  display: flex;
-  color: #0d8f6e;
-  opacity: 0.95;
-}
-
-.foot-credits-chevron {
-  margin-left: auto;
-  width: 6px;
-  height: 6px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
-  transition: transform 0.2s ease;
-  opacity: 0.55;
-}
-
-.foot-credits[open] .foot-credits-chevron {
-  transform: rotate(-135deg);
-  margin-top: 4px;
-}
-
-.foot-credits-box {
-  padding: 0 14px 14px;
-  border-top: 1px solid rgba(0, 0, 0, 0.07);
-}
-
-.foot-credits-lead {
-  margin: 12px 0 0;
-  font-size: 11px;
-  line-height: 1.55;
-  color: var(--chrome-muted);
-  font-weight: 400;
-}
-
-.foot-credits-lead strong {
-  color: var(--chrome-text);
-  font-weight: 600;
-}
-
-.foot-credits-lead a {
-  color: var(--chrome-link);
-  text-decoration: none;
-  border-bottom: 1px solid rgba(21, 101, 192, 0.3);
-}
-
-.foot-credits-lead a:hover {
-  border-bottom-color: var(--chrome-link);
-}
-
-.foot-cite {
-  margin: 12px 0 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.foot-cite li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px 10px;
-  font-size: 10px;
-  line-height: 1.45;
-  color: var(--chrome-muted);
-}
-
-.foot-cite-lbl {
-  flex-shrink: 0;
-  min-width: 4.5rem;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #6b7280;
-}
-
-.foot-cite a {
-  color: var(--chrome-link);
-  text-decoration: none;
-}
-
-.foot-cite a:hover {
-  text-decoration: underline;
-}
-
-.foot-cite em {
-  font-style: italic;
-  color: #6b7280;
-}
-
-.foot-cite code {
-  font-size: 0.85em;
-  padding: 0.1em 0.35em;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
 }
 
 /* Draggable attribute panel (IFFI click) */

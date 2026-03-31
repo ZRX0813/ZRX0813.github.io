@@ -74,9 +74,8 @@ def clip_merge(pattern: str, out_path: Path, fix_poly: bool) -> None:
     out = out[out.geometry.notna() & ~out.geometry.is_empty]
     tmp = out_path.with_suffix(".tmp.geojson")
     out.to_file(tmp, driver="GeoJSON")
-    cmd = ["ogr2ogr", "-f", "GeoJSON", "-lco", "COORDINATE_PRECISION=5"]
-    if fix_poly:
-        cmd += ["-simplify", "0.001"]
+    # No -simplify on polygons: preserves IFFI footprint geometry. Higher precision avoids blocky vertices.
+    cmd = ["ogr2ogr", "-f", "GeoJSON", "-lco", "COORDINATE_PRECISION=7"]
     cmd += [str(out_path), str(tmp)]
     subprocess.run(cmd, check=True)
     tmp.unlink()
