@@ -42,11 +42,11 @@ function stylesForSpec(spec, idx) {
       pathStyle: styleForIndex(idx),
       pointStyle: {
         radius: spec.pointRadius ?? 4,
-        color: "#9a3412",
+        color: "#e11d48",
         weight: 1,
-        fillColor: "#fb923c",
-        fillOpacity: 0.82,
-        opacity: 0.95,
+        fillColor: "#fecdd3",
+        fillOpacity: 1,
+        opacity: 1,
       },
     };
   }
@@ -184,27 +184,14 @@ function attachFeatureHandlers(feature, lyr, rec) {
   if (spec.detailPanel && feature.properties) {
     if (isPoint && rec.pointStyle) {
       const baseStyle = { ...rec.pointStyle };
-      const hoverStyle = { ...baseStyle, weight: 2, fillOpacity: 1 };
       const selectedStyle = {
         ...baseStyle,
-        weight: 3,
-        fillColor: "#ea580c",
-        color: "#431407",
+        weight: 2,
+        fillColor: "#ef4444",
+        color: "#7f1d1d",
         fillOpacity: 1,
         opacity: 1,
       };
-      lyr.on("mouseover", () => {
-        if (!exclusivePointSelection || exclusivePointSelection.lyr !== lyr) {
-          lyr.setStyle(hoverStyle);
-        }
-      });
-      lyr.on("mouseout", () => {
-        if (!exclusivePointSelection || exclusivePointSelection.lyr !== lyr) {
-          lyr.setStyle(baseStyle);
-        } else {
-          lyr.setStyle(selectedStyle);
-        }
-      });
       lyr.on("click", (e) => {
         L.DomEvent.stopPropagation(e);
         clearExclusivePointSelection();
