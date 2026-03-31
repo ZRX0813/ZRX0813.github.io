@@ -291,3 +291,132 @@ main {
 .footer-link:hover {
   text-decoration: underline;
 }
+
+/* --- Research subpage --- */
+.research-main {
+  max-width: 48rem;
+}
+
+.research-lead {
+  margin: 0 0 1.75rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--chrome-text);
+  opacity: 0.88;
+}
+
+.research-lead a {
+  color: var(--chrome-link);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.research-lead a:hover {
+  text-decoration: underline;
+}
+
+.research-section {
+  margin-top: 2rem;
+}
+
+.edu-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  opacity: 0.88;
+}
+
+.research-keywords {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.keywords-note {
+  font-size: 0.82rem;
+  opacity: 0.7;
+}
+
+.works-note {
+  margin: 0 0 1.25rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--chrome-text);
+  opacity: 0.72;
+}
+
+.work-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: work;
+}
+
+.work-item {
+  margin: 0;
+  padding: 1.15rem 0;
+  border-bottom: 1px solid var(--chrome-border);
+}
+
+.work-item:last-child {
+  border-bottom: none;
+}
+
+.work-title {
+  display: inline;
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.45;
+  color: var(--chrome-text);
+  text-decoration: none;
+}
+
+.work-title:hover {
+  color: var(--chrome-link);
+  text-decoration: underline;
+}
+
+.work-meta {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--chrome-text);
+  opacity: 0.78;
+}
+
+.work-doi {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  opacity: 0.75;
+}
+
+.work-doi a {
+  color: var(--chrome-link);
+  text-decoration: none;
+}
+
+.work-doi a:hover {
+  text-decoration: underline;
+}
+
+.home-research-teaser {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.home-research-teaser a {
+  color: var(--chrome-link);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.home-research-teaser a:hover {
+  text-decoration: underline;
+}
+
+.nav a[aria-current="page"] {
+  font-weight: 700;
+  opacity: 1;
+}
